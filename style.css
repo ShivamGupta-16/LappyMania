@@ -682,6 +682,18 @@ header.active{
 
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+
+.products .swiper-button-next,
+.products .swiper-button-prev {
+    top: calc(50% + 90px); /* Move arrows 15px lower in the products section only */
+    transform: translateY(-50%);
+}
+
+
 @media (max-width:450px){
 
     html{

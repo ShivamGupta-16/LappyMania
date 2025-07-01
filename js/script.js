@@ -49,7 +49,10 @@ document.querySelectorAll('.small-image-3').forEach(images =>{
     }
 });
 
-let countDate = new Date('aug 1, 2021 00:00:00').getTime();
+let countDate = new Date();
+countDate.setDate(countDate.getDate() + 7);
+countDate = countDate.getTime();
+
 
 function countDown(){
 

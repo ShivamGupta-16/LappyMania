@@ -6,7 +6,7 @@ LappyMania is a responsive laptop e-commerce website where users can explore, co
 
 ## 🌐 Live Demo
 
-> 🚀 [View Live Site](https://lapy-mania.vercel.app/)  
+> 🚀 [View Live Site](https://lappymania.vercel.app/)  
 
 ---
 

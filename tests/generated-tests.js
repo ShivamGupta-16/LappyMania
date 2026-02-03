@@ -1,194 +1,184 @@
 // Tests for index.html
 ```javascript
 import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { act } from 'react-dom/test-utils';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom'; // Assuming routing is used
-import App from './App'; // Assuming App.js contains the main component
+import App from './App'; // Assuming your main component is App.js
 
-jest.useFakeTimers();
+jest.mock('./api', () => ({
+  getProducts: () => Promise.resolve([{ id: 1, title: 'Product 1' }]),
+  getDeals: () => Promise.resolve([{ id: 1, countdown: 10000 }]),
+}));
 
-describe('E-commerce Website', () => {
-  describe('Search Functionality', () => {
-    test('Successful search', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const searchInput = screen.getByRole('textbox', { name: /search/i });
-      fireEvent.change(searchInput, { target: { value: 'laptop' } });
-      // Assertions to check if search results are displayed.  Requires knowing the implementation details. Example:
-      expect(screen.getByText(/laptop/i)).toBeInTheDocument(); 
-    });
-    test('No results', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const searchInput = screen.getByRole('textbox', { name: /search/i });
-      fireEvent.change(searchInput, { target: { value: 'xyz123' } });
-      // Assertions to check for "no results" message or empty results section. Example:
-      expect(screen.getByText(/no results/i)).toBeInTheDocument();
-    });
-    test('Empty search', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const searchInput = screen.getByRole('textbox', { name: /search/i });
-      fireEvent.change(searchInput, { target: { value: '' } });
-      // Assertions to check for initial state or default display.
-      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument(); // Example assertion
-    });
+describe('Header', () => {
+  test('Menu opens and closes', () => {
+    render(<App />);
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    fireEvent.click(menuButton);
+    expect(screen.getByRole('menu')).toBeVisible();
+    fireEvent.click(menuButton);
+    expect(screen.queryByRole('menu')).not.toBeVisible();
   });
 
-
-  describe('Product Display', () => {
-    test('Slider functionality', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      // Find slider elements (buttons, images).  Requires implementation details.
-      const nextButton = screen.getByRole('button', { name: /next/i });
-      fireEvent.click(nextButton);
-      // Assertions to check if the slider has moved to the next image.  Requires implementation specifics
-      expect(screen.getByRole('img', {name: /image2/i})).toBeVisible; //Example
-    });
-    test('Product data display', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      // Assertions to check if product information (name, price, etc.) is displayed correctly.  Requires implementation details.  Example:
-      expect(screen.getByText(/Product Name/i)).toBeInTheDocument();
-    });
+  test('Theme toggle changes theme', () => {
+    render(<App />);
+    const themeToggle = screen.getByRole('checkbox', { name: /theme/i });
+    fireEvent.click(themeToggle);
+    // Add assertions to check for theme change (e.g., class change)
+    expect(document.body).toHaveClass('dark-theme'); //Example assertion, adapt as needed
   });
+});
 
-  describe('Countdown Timer', () => {
-    test('Timer counts down', () => {
-      jest.advanceTimersByTime(1000); // Advance time to check if timer updates
-      // Assertions to check the timer value. Requires implementation details. Example:
-      expect(screen.getByText(/1:59/i)).toBeInTheDocument(); // Replace with expected time based on implementation
-    });
-    test('Timer reaches zero', () => {
-        jest.advanceTimersByTime(60000); //Advance timer to 60 seconds for testing
-        //Assertions for timer reaching zero. Requires implementation details
-        expect(screen.getByText(/Time's up/i)).toBeInTheDocument(); //Replace with expected message
 
-    });
-  });
-
-  describe('Navigation Menu', () => {
-    test('Responsiveness', () => {
-      // Requires mocking window resize events or using a library that simulates window resizing.
-      //  Example with screen.queryBy... to check for hidden/visible based on window size
-      render(<BrowserRouter><App /></BrowserRouter>);
-      //Simulate resize
-      // Assertions to check menu visibility based on screen size.  Requires implementation details. Example:
-    });
-  });
-
-  describe('Icon Interactions', () => {
-    test('Heart icon', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const heartIcon = screen.getByRole('button', { name: /heart/i });
-      fireEvent.click(heartIcon);
-      // Assertions to check for changes in the heart icon state (e.g., filled vs. empty). Requires implementation details.
-    });
-    test('Cart icon', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const cartIcon = screen.getByRole('button', { name: /cart/i });
-      fireEvent.click(cartIcon);
-      // Assertions to check for cart updates. Requires implementation details.
-    });
-    test('User icon', () => {
-      render(<BrowserRouter><App /></BrowserRouter>);
-      const userIcon = screen.getByRole('button', { name: /user/i });
-      fireEvent.click(userIcon);
-      // Assertions to check for user menu or login/profile changes. Requires implementation details.
+describe('Navigation', () => {
+  test('Links navigate correctly', () => {
+    render(<App />);
+    const links = screen.getAllByRole('link');
+    links.forEach(link => {
+      fireEvent.click(link);
+      // Assertions to check navigation, may require mocking history or Router
+      // Example: expect(window.location.href).toContain('/about');
     });
   });
 });
+
+
+describe('Product Slider', () => {
+  test('Slider responds to resize', () => {
+    render(<App />);
+    const slider = screen.getByRole('slider'); // Adjust selector as needed.
+    // Simulate resize event (requires more sophisticated testing library setup)
+    // Example: userEvent.resize(slider, { width: 200 });
+    // Assertions to check responsiveness, potentially checking slide count or visibility
+  });
+});
+
+
+describe('Deal Countdown', () => {
+  test('Countdown timer works', async () => {
+    jest.useFakeTimers();
+    render(<App />);
+    const timerElement = await screen.findByText(/countdown/i); //Adapt selector
+    expect(timerElement).toBeInTheDocument();
+    //act(() => jest.advanceTimersByTime(1000));  //Advance timer for testing
+    // Add assertions to check timer decrement, requires mocking or specific implementation details
+  });
+    test('Countdown timer handles zero', async () => {
+    jest.useFakeTimers();
+    render(<App />);
+      // Mock a deal with a countdown of 0
+      jest.spyOn(global, 'setTimeout'); 
+      // Add assertions to check for "Deal Ended" message or similar
+  });
+});
+
+
+describe('Image Galleries', () => {
+  test('Gallery images are displayed', () => {
+    render(<App />);
+    const images = screen.getAllByRole('img', { name: /featured/i }); // Adapt selector
+    expect(images.length).toBeGreaterThan(0); //Adjust as per expected number of images
+  });
+  test('Gallery navigation works', () => {
+    render(<App />);
+    //Add assertions for gallery navigation (next/previous buttons or similar)
+    //Requires interaction with the gallery's implementation
+  });
+});
+
+
 ```
 
 // Tests for script.test.js
 ```javascript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Navbar from './Navbar'; // Assuming Navbar component exists
-import ThemeToggler from './ThemeToggler'; // Assuming ThemeToggler component exists
-import ImageGallery from './ImageGallery'; // Assuming ImageGallery component exists
-import Swiper from 'swiper'; // Assuming Swiper library is used
-import 'swiper/css';
-import 'swiper/css/navigation';
-import { countDown } from './script'; // Assuming countDown function exists
-
+import Navbar from './Navbar';
+import ThemeToggler from './ThemeToggler';
+import ImageGallery from './ImageGallery';
+import CountdownTimer from './CountdownTimer';
+import SwiperSlider from './SwiperSlider'; // Assuming a single component for both sliders
 
 jest.useFakeTimers();
 
 describe('Navbar', () => {
-  test('Navbar toggle functionality', () => {
+  test('toggles active class on menu click', () => {
     render(<Navbar />);
-    const menuBar = screen.getByRole('button', { name: /menu-bar/i });
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    fireEvent.click(menuButton);
+    expect(screen.getByTestId('navbar')).toHaveClass('active');
+  });
+  test('removes active class on close', () => {
+    render(<Navbar />);
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    fireEvent.click(menuButton);
     const closeButton = screen.getByRole('button', { name: /close/i });
-
-    fireEvent.click(menuBar);
-    expect(screen.getByText(/menu/i)).toBeInTheDocument();
-
     fireEvent.click(closeButton);
-    expect(screen.queryByText(/menu/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('navbar')).not.toHaveClass('active');
+  });
+  test('removes active class on scroll', () => {
+    render(<Navbar />);
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    fireEvent.click(menuButton);
+    window.dispatchEvent(new Event('scroll'));
+    expect(screen.getByTestId('navbar')).not.toHaveClass('active');
 
   });
 });
 
 
 describe('ThemeToggler', () => {
-  test('Theme toggler functionality', () => {
+  test('toggles theme', () => {
     render(<ThemeToggler />);
-    const toggler = screen.getByRole('button', { name: /theme-toggler/i });
+    const toggler = screen.getByRole('button', { name: /theme/i });
     fireEvent.click(toggler);
-    // Add assertions to check for theme change (e.g., class change)
-    expect(toggler).toHaveClass('active'); //Example assertion. Adjust as needed
+    expect(toggler).toHaveClass('fa-sun');
+    expect(document.body).toHaveClass('active');
+    fireEvent.click(toggler);
+    expect(toggler).not.toHaveClass('fa-sun');
+    expect(document.body).not.toHaveClass('active');
   });
 });
 
 describe('ImageGallery', () => {
-  test('Image gallery updates on small image clicks', () => {
+  test('updates big image on small image click', () => {
     render(<ImageGallery />);
-    const smallImage = screen.getByTestId('small-image-1'); //Example. Adjust selector as needed.
-    fireEvent.click(smallImage);
-    // Add assertions to check for main image update.  e.g., src attribute change.
-    expect(screen.getByRole('img', {name: /main image/i})).toHaveAttribute('src', '/path/to/image1'); // Example assertion. Adjust as needed.
-
+    const smallImages = screen.getAllByRole('img', { name: /small/i });
+    fireEvent.click(smallImages[0]);
+    expect(screen.getByRole('img', { name: /big/i })).toHaveAttribute('src', '/path/to/image1.jpg'); //Replace with actual paths
+    fireEvent.click(smallImages[1]);
+    expect(screen.getByRole('img', { name: /big/i })).toHaveAttribute('src', '/path/to/image2.jpg'); //Replace with actual paths
   });
-  test('Image gallery handles non-existent image click gracefully', () => {
-    render(<ImageGallery />);
-    //Simulate a click on a non-existent image to check for error handling.  Adjust as needed.
-    expect(() => fireEvent.click(screen.getByTestId('non-existent-image'))).toThrow(); // Example error handling assertion. Adjust as needed
-
-  });
-
 });
 
-describe('Countdown Timer', () => {
-  test('countDown function', () => {
-    const mockCallback = jest.fn();
-    countDown(10, mockCallback);
-    expect(mockCallback).toHaveBeenCalledTimes(10);
-    expect(mockCallback).toHaveBeenLastCalledWith(0);
+describe('CountdownTimer', () => {
+  test('updates every second', () => {
+    render(<CountdownTimer initialTime={10} />);
+    expect(screen.getByText(/10/i)).toBeInTheDocument();
+    jest.advanceTimersByTime(1000);
+    expect(screen.getByText(/9/i)).toBeInTheDocument();
     jest.runAllTimers();
+  });
+  test('handles zero time', () => {
+    render(<CountdownTimer initialTime={0} />);
+    expect(screen.getByText(/0/i)).toBeInTheDocument();
 
   });
-  test('countDown function with zero time', () => {
-    const mockCallback = jest.fn();
-    countDown(0, mockCallback);
-    expect(mockCallback).toHaveBeenCalledTimes(1);
-    expect(mockCallback).toHaveBeenLastCalledWith(0);
-
-  });
-
-
 });
 
-describe('Swiper Slider', () => {
-  test('Swiper slider initialization', () => {
-    render( <div id="product-slider"></div> ); // Example render. Adapt as needed.
-    render( <div id="review-slider"></div> ); // Example render. Adapt as needed.
-    const productSlider = new Swiper('#product-slider');
-    const reviewSlider = new Swiper('#review-slider');
-    expect(productSlider).toBeDefined();
-    expect(reviewSlider).toBeDefined();
+
+describe('SwiperSlider', () => {
+  test('slides', () => {
+    render(<SwiperSlider />);
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    fireEvent.click(nextButton);
+    // Add assertions to check slide change.  Implementation specific.
   });
-    test('Swiper responsive behavior', () => {
-        // Simulate different breakpoints (window resize) and verify slider behavior.  This is complex and requires window resize simulation.  It's a stub.
-        // ...
-    });
+  test('responsive', () => {
+    // Test different screen sizes using @media queries.  Implementation specific.
+    //This test requires mocking window.innerWidth
+  });
 });
 
 ```
